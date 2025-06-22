@@ -318,6 +318,19 @@ module.exports = sock = async (sock, m, chatUpdate, store) => {
             }
             break;
 
+            case prefix + "sc":
+            case prefix + "script":
+            case prefix + "source":
+            case prefix + "sourcecode": {
+            	addCountCmd('#script', m.sender, global.db._cmd);
+            	const teks = `Bot ini open-source dan bebas dikembangkan.
+Jangan lupa ⭐ repo ini kalau membantu ya!
+
+🔗 https://github.com/riycs/hinatabot`;
+                m.reply(teks);
+            }
+            break;
+
             /* ISLAM */
 
             case prefix + "surahlist": {
@@ -574,39 +587,6 @@ module.exports = sock = async (sock, m, chatUpdate, store) => {
                     });
                 }
                 try {
-                    const res = await axios.get('https://raw.githubusercontent.com/riycs/scrape-2/master/games/tebakgambar.json');
-                    const data = await res.data;
-                    const soal = pickRandom(data);
-                    const teks = `*TEBAK GAMBAR*\n\nDeskripsi: ${soal.deskripsi}\nPetunjuk: ${soal.jawaban.replace(/[AIUEO]/gi, '_')}\nWaktu: 90 detik\n\nBalas soal ini dengan *Nyerah* jika ingin menyerah.`;
-                    const msg = await sock.sendMessage(m.chat, {
-                        image: {
-                            url: soal.img
-                        },
-                        caption: teks
-                    }, {
-                        quoted: m
-                    });
-                    const jawab = soal.jawaban.toLowerCase();
-                    addPlayGame(m.chat, 'Tebak Gambar', jawab, 90, msg, tebakgambar);
-                    gameAdd(m.sender, global.db.glimit);
-                } catch (err) {
-                    m.reply(global.mess.error);
-                }
-            }
-            break;
-
-            case prefix + "tebakgambar": {
-                if (isGame(m.sender, isOwner, gcount, global.db.glimit))
-                    return m.reply(global.mess.glimit);
-                if (isPlayGame(m.chat, tebakgambar)) {
-                    const pos = getGamePosi(m.chat, tebakgambar);
-                    return sock.sendMessage(m.chat, {
-                        text: `Masih ada game yang belum diselesaikan.`
-                    }, {
-                        quoted: tebakgambar[pos].msg
-                    });
-                }
-                try {
                     const res = await Api.tebakgambar();
                     const data = pickRandom(res);
                     const { img, deskripsi, jawaban } = data;
@@ -642,7 +622,7 @@ module.exports = sock = async (sock, m, chatUpdate, store) => {
                 try {
                     const res = await Api.kuis();
                     const data = pickRandom(res);
-                    const { soal jawaban } = data;
+                    const { soal, jawaban } = data;
                     const teks = `*GAME KUIS*\n\nSoal: ${soal}\nPetunjuk: ${jawaban.replace(/[AIUEO]/gi, '_')}\nWaktu: ${global.main.game.waktu} detik\n\nBalas soal ini dengan *Nyerah* jika ingin menyerah.`;
                     const msg = await sock.sendMessage(m.chat, {
                         text: teks
