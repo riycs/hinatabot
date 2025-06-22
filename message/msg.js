@@ -220,8 +220,7 @@ module.exports = sock = async (sock, m, chatUpdate, store) => {
                 chalk.black(chalk.yellow(m.chat)),
                 '\n' + chalk.black(chalk.bgWhite('- COMMAND')), chalk.black(chalk.bgGreen(command)),
                 '\n' + chalk.black(chalk.bgWhite('- HIT')), chalk.black(chalk.bgGreen(hit))
-                );
-            })
+            );
         }
 
         switch (command) {
