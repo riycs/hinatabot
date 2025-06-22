@@ -185,64 +185,31 @@ module.exports = sock = async (sock, m, chatUpdate, store) => {
         // Cek expired premium
         _prem.expiredCheck(sock, global.db.premium);
 
-        // Handle tebakgambar
-        cekWaktuGame(sock, tebakgambar)
-        if (isPlayGame(m.chat, tebakgambar) && isUser) {
-            const pos = getGamePosi(m.chat, tebakgambar)
-            const data = tebakgambar[pos]
-            const jawaban = getJawabanGame(m.chat, tebakgambar)
-            const userJawab = body.toLowerCase()
-            const dariBotSendiri = quoted?.id === data?.msg?.id
+        // Handle game
+        function handleTebakan(m, sock, dbx, main) {
+            cekWaktuGame(sock, dbx);
+            if (!isPlayGame(m.chat, dbx) || !isUser) return;
+            const pos = getGamePosi(m.chat, dbx);
+            const data = dbx[pos];
+            const jawaban = getJawabanGame(m.chat, dbx);
+            const userJawab = body.toLowerCase();
+            const dariBotSendiri = quoted?.id === data?.msg?.id;
             if (dariBotSendiri && userJawab === 'nyerah') {
-                m.reply(`Yah nyerah!\nJawabannya: ${jawaban}`)
-                tebakgambar.splice(pos, 1)
-                return
+                m.reply(`Yah nyerah!\nJawabannya: ${jawaban}`);
+                dbx.splice(pos, 1);
+                return true;
             }
             if (userJawab === jawaban) {
-                const uang = randomNomor(100, 150)
-                const xp = randomNomor(20, 30)
-                addBalance(m.sender, uang, global.db.balance)
-                _level.addLevelingXp(m.sender, xp, global.db.level)
-                m.reply(`*🎊 Selamat Jawaban Kamu Benar 🎉*\n\n` +
-                    `Jawaban: ${jawaban}\n` +
-                    `Hadiah: $${uang} balance\nXP: ${xp}\n\n` +
-                    `Mau main lagi? ketik *${prefix}tebakgambar*`)
-                tebakgambar.splice(pos, 1)
-                return
+                const uang = randomNomor(100, 150);
+                addBalance(m.sender, uang, global.db.balance);
+                m.reply(`*🎊 Selamat Jawaban Kamu Benar 🎉*\n\nJawaban: ${jawaban}\nHadiah: $${uang} balance\n\nMau main lagi? ketik *${main}*`);
+                dbx.splice(pos, 1);
+                return true;
             }
-            if (similarity(userJawab, jawaban) >= threshold) {
-                m.reply('Dikit lagi!')
-            }
+            return false;
         }
-        // Handle kuis  
-        cekWaktuGame(sock, kuis)
-        if (isPlayGame(m.chat, kuis) && isUser) {
-            const pos = getGamePosi(m.chat, kuis)
-            const data = kuis[pos]
-            const jawaban = getJawabanGame(m.chat, kuis)
-            const userJawab = body.toLowerCase()
-            const dariBotSendiri = quoted?.id === data?.msg?.id
-            if (dariBotSendiri && userJawab === 'nyerah') {
-                m.reply(`Yah nyerah!\nJawabannya: ${jawaban}`)
-                kuis.splice(pos, 1)
-                return
-            }
-            if (userJawab === jawaban) {
-                const uang = randomNomor(100, 150)
-                const xp = randomNomor(20, 30)
-                addBalance(m.sender, uang, global.db.balance)
-                _level.addLevelingXp(m.sender, xp, global.db.level)
-                m.reply(`*🎊 Selamat Jawaban Kamu Benar 🎉*\n\n` +
-                    `Jawaban: ${jawaban}\n` +
-                    `Hadiah: $${uang} balance\nXP: ${xp}\n\n` +
-                    `Mau main lagi? ketik *${prefix}kuis*`)
-                kuis.splice(pos, 1)
-                return
-            }
-            if (similarity(userJawab, jawaban) >= threshold) {
-                m.reply('Dikit lagi!')
-            }
-        }
+        handleTebakan(m, sock, tebakgambar, `${prefix}tebakgambar`);
+        handleTebakan(m, sock, kuis, `${prefix}kuis`);
 
         // Log
         if (isValidCommand && !m.key.fromMe) {
