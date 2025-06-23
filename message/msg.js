@@ -20,6 +20,7 @@ const {
     randomNomor,
     toRupiah,
     pickRandom,
+    getRandom,
     sleep
 } = require("../lib/function");
 const {
@@ -316,36 +317,26 @@ Jangan lupa ⭐ repo ini kalau membantu ya!
             break;
 
             case prefix + "surah": {
-                if (!text) {
-                    return m.reply(`Contoh:\n- ${prefix}surah al-fatihah\n- ${prefix}surah 1\n\nAtau bisa cek: ${prefix}surahlist`);
+                if (!text || isNaN(text)) {
+                    return m.reply(`Contoh:\n- ${prefix}surah 1\n- ${prefix}surah 36\n\nGunakan hanya *nomor surah*.\nCek semua surah: ${prefix}surahlist`);
                 }
                 try {
-                    const input = text.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const number = parseInt(text);
                     const res = await Api.quranSurahList();
                     const surahList = res.data;
-                    const targetSurah = surahList.find(s =>
-                        s.number.toString() === text ||
-                        s.name_id.toLowerCase().replace(/[^a-z0-9]/g, '') === input
-                    );
+                    const targetSurah = surahList.find(s => parseInt(s.number) === number);
                     if (!targetSurah) return m.reply('Surah tidak ditemukan.');
-                    const {
-                        detail
-                    } = await Api.quranSurahDetail(targetSurah.number);
+                    const data = await Api.quranSurahDetail(number);
+                    const surahDetail = data.data;
                     const sendAudio = await sock.sendMessage(m.chat, {
-                        audio: {
-                            url: detail.data.audio_url
-                        },
+                        audio: { url: surahDetail.audio_url },
                         mimetype: 'audio/mpeg',
-                        fileName: `${detail.data.name_id}.mp3`,
+                        fileName: `${surahDetail.name_id}.mp3`,
                         ptt: true
-                    }, {
-                        quoted: m
-                    });
+                    }, { quoted: m });
                     await sock.sendMessage(m.chat, {
-                        text: detail.data.tafsir.trim()
-                    }, {
-                        quoted: sendAudio
-                    });
+                        text: surahDetail.tafsir.trim()
+                    }, { quoted: sendAudio });
                 } catch (err) {
                     m.reply(global.mess.error);
                 }
@@ -418,8 +409,8 @@ Jangan lupa ⭐ repo ini kalau membantu ya!
                 try {
                     const res = await Api.tiktok(cleanUrl);
                     const data = res.data?.download;
-                    const title = data.metadata?.title || 'Tiktok...';
-                    const filename = `${data.metadata?.title}.mp4` || 'Tiktok.mp4';
+                    const title = res.data?.metadata?.description || 'Tiktok...';
+                    const filename = `${res.data?.metadata?.description}.mp4` || getRandom('Tiktok.mp4');
                     if (data.video && Array.isArray(data.video)) {
                         await sock.sendBuffer(m, 'video', data.video[0], title, filename);
                     } else if (data.photo && Array.isArray(data.photo)) {
