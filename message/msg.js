@@ -142,7 +142,6 @@ module.exports = sock = async (sock, m, chatUpdate, store) => {
         const args = body.trim().split(" ");
         const text = body.slice(command.length + 1).trim();
         const quoted = m.quoted || m;
-        const mime = (quoted.msg || quoted).mimetype || "";
 
         if (m.isGroup) {
             try {
@@ -351,21 +350,28 @@ Jangan lupa ⭐ repo ini kalau membantu ya!
                 if (isLimit(m.sender, isPremium, isOwner, global.main.limit, global.db.limit)) {
                     return m.reply(global.mess.limit);
                 }
-                const type = /image/.test(mime) ? 'image' : /video/.test(mime) ? 'video' : quoted?.isAnimated ? 'animated' : null;
-                if (!type) return m.reply(`Balas media dengan caption: ${command}`);
-                const media = await quoted.download();
-                if (type === 'video' && quoted.seconds > 8) return m.reply("⚠️ Maksimal durasi video 8 detik!");
-                const file = type === 'image' ?
-                    await sock.sendImageAsSticker(m.chat, media, m, {
-                        packname: global.sticker.packName,
-                        author: global.sticker.author
-                    }) :
-                    await sock.sendVideoAsSticker(m.chat, media, m, {
-                        packname: global.sticker.packName,
-                        author: global.sticker.author
-                    });
-                fs.unlinkSync(file);
-                limitAdd(m.sender, global.db.limit);
+                if (!(m.isImage || m.isVideo)) {
+                    return m.reply(`Kirim atau Reply gambar/video (maks 8 detik) dengan caption: ${command}`);
+                }
+                if (m.isVideo && m.quoted.seconds > 8) {
+                    return m.reply("Maksimal durasi video adalah 8 detik!");
+                }
+                try {
+                    const media = await quoted.download();
+                    const file = m.isImage ?
+                        await sock.sendImageAsSticker(m.chat, media, m, {
+                            packname: global.sticker.packName,
+                            author: global.sticker.author
+                        }) :
+                        await sock.sendVideoAsSticker(m.chat, media, m, {
+                            packname: global.sticker.packName,
+                            author: global.sticker.author
+                        });
+                    fs.unlinkSync(file);
+                    limitAdd(m.sender, global.db.limit);
+                } catch (err) {
+                    m.reply(global.mess.error);
+                }
             }
             break;
 
@@ -373,22 +379,31 @@ Jangan lupa ⭐ repo ini kalau membantu ya!
             case prefix + "stikerwm":
             case prefix + "stickerwm": {
                 if (!isPremium) return m.reply(global.mess.premium);
-                const type = /image|webp/.test(mime) ? 'image' : /video/.test(mime) ? 'video' : quoted?.isAnimated ? 'animated' : null;
-                if (!type) return m.reply(`Balas media dengan caption: ${command} Packname|Author`);
-                const [pName, aName] = text.split('|').map(x => x.trim());
-                if (!pName) return m.reply(`Kirim: ${command} Packname|Author`);
-                const media = await quoted.download();
-                if (type === 'video' && quoted.seconds > 8) return m.reply("⚠️ Maksimal durasi video 8 detik!");
-                const file = type === 'image' ?
-                    await sock.sendImageAsSticker(m.chat, media, m, {
-                        packname: pName,
-                        author: aName
-                    }) :
-                    await sock.sendVideoAsSticker(m.chat, media, m, {
-                        packname: pName,
-                        author: aName
-                    });
-                fs.unlinkSync(file);
+                if (!(m.isImage || m.isVideo)) {
+                    return m.reply(`Kirim atau Reply gambar/video (maks 8 detik) dengan caption: ${command} Packname|Author`);
+                }
+                if (m.isVideo && m.quoted.seconds > 8) {
+                    return m.reply("Maksimal durasi video adalah 8 detik!");
+                }
+                const [packname = "", author = ""] = text.split("|").map(v => v.trim());
+                if (!packname) {
+                    return m.reply(`Contoh: ${command} HinataBot|by Riy`);
+                }
+                try {
+                    const media = await quoted.download();
+                    const file = m.isImage ?
+                        await sock.sendImageAsSticker(m.chat, media, m, {
+                            packname,
+                            author
+                        }) :
+                        await sock.sendVideoAsSticker(m.chat, media, m, {
+                            packname,
+                            author
+                        });
+                    fs.unlinkSync(file);
+                } catch (err) {
+                    m.reply(global.mess.error);
+                }
             }
             break;
 
