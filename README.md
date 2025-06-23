@@ -19,10 +19,12 @@ Login dengan **kode pairing WhatsApp**.
 
 ## Kontributor
 
+* [`Whiskeysockets`](https://github.com/whiskeysockets/Baileys) – WhatsApp Lib
 * [`Riycs`](https://github.com/riiycs) – Owner
 * [`Yoga`](https://github.com/YogGanz) – Best Friend
 * [`Arthur`](https://github.com/ArthurSatir) – For Help
-* [`Whiskeysockets`](https://github.com/whiskeysockets/Baileys) – WhatsApp Lib
+* [`Siputzx API`](https://api.siputzx.my.id/) - Penyedia API
+* [`VredenApis`](https://api.vreden.my.id/) - Penyedia API
 
 ---
 
